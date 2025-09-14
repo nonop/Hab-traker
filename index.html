@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Habits</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111">
+<style>
+:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--muted:#9aa3b2;--acc:#48c78e;--warn:#ffb100;--grid:#20242e}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial}
+header{position:sticky;top:0;z-index:1;display:flex;gap:.6rem;align-items:center;justify-content:space-between;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35));padding:.75rem .9rem}
+h1{font-size:1.1rem;margin:0}
+.wrap{padding:1rem;display:flex;flex-direction:column;gap:1rem}
+.card{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:.9rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+input[type=text],select,input[type=number]{background:#0c0e13;border:1px solid var(--grid);color:var(--ink);border-radius:10px;padding:.55rem .7rem}
+button{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
+.muted{color:var(--muted);font-size:.9rem}
+.pill{padding:.2rem .5rem;border:1px solid var(--grid);border-radius:999px;font-size:.75rem;color:var(--muted)}
+.section{margin-top:.5rem}
+.section>summary{cursor:pointer;list-style:none}
+.section>summary::-webkit-details-marker{display:none}
+.kpi{background:#0e1219;border:1px solid var(--grid);padding:.3rem .5rem;border-radius:8px;font-size:.85rem;margin-right:.4rem}
+.list .item{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--grid);padding:.55rem 0}
+.item .name{font-weight:600}
+.item .sub{font-size:.85rem;color:var(--muted)}
+.check{width:22px;height:22px;border:2px solid #3a4150;border-radius:6px;display:inline-block;background:#0c0f15}
+.check.done{background:linear-gradient(180deg,#59dcac,#21b37f);border-color:#1ea874;position:relative}
+.check.done:after{content:"";position:absolute;left:5px;top:1px;width:6px;height:12px;border:3px solid #0b2c20;border-left:0;border-top:0;transform:rotate(45deg)}
+.tags{display:flex;gap:.35rem;flex-wrap:wrap}
+.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--muted)}
+.searchrow{gap:.4rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Habit Tracker</h1>
+  <div class="row">
+    <a class="ghost" href="settings.html" style="text-decoration:none"><button class="ghost">Paramètres</button></a>
+    <button class="ghost" id="btnExport">Exporter</button>
+    <input type="file" id="fileImport" accept="application/json" style="display:none">
+    <button class="ghost" id="btnImport">Importer</button>
+    <button class="ghost" id="btnInstall" style="display:none">Installer</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <div class="row searchrow">
+      <input id="q" class="sp" type="text" placeholder="Rechercher une habitude…">
+      <label class="row" style="gap:.35rem">
+        <input type="checkbox" id="dueOnly">
+        <span class="muted">Due aujourd’hui</span>
+      </label>
+      <select id="groupBy">
+        <option value="frequency">Grouper: Fréquence</option>
+        <option value="none">Sans groupe</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:.5rem">
+      <span class="kpi" id="kpiDaily"></span>
+      <span class="kpi" id="kpiWeekly"></span>
+      <span class="kpi" id="kpiMonthly"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <details class="section" id="secDaily" open>
+      <summary><span class="pill">Quotidien</span></summary>
+      <div class="list" id="listDaily"></div>
+    </details>
+    <details class="section" id="secWeekly" open>
+      <summary><span class="pill">Hebdo</span> <span class="muted">(adapté au jour)</span></summary>
+      <div class="list" id="listWeekly"></div>
+    </details>
+    <details class="section" id="secMonthly" open>
+      <summary><span class="pill">Mensuel</span></summary>
+      <div class="list" id="listMonthly"></div>
+    </details>
+  </div>
+
+  <div class="muted">PWA offline • Données locales (localStorage)</div>
+</div>
+
+<script>
+/* ====== Storage & modèle ====== */
+const DBKEY="habitdb.v2";
+const db={load(){try{return JSON.parse(localStorage.getItem(DBKEY))||{habits:[],logs:{}}}catch{return{habits:[],logs:{}}}},save(d){localStorage.setItem(DBKEY,JSON.stringify(d))}};
+let state=db.load();
+/* habit: {id,name,frequency,goal,weight,active,weekdays:[0..6],notes:''}
+   logs: { [habitId]: { 'YYYY-MM-DD':1 } } */
+
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+const today=new Date(); const todayISO=new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const wd=today.getDay(); // 0=Dim … 6=Sam
+
+/* ====== Due logic ====== */
+function isDueToday(h){
+  if(h.frequency==="daily") return true;
+  if(h.frequency==="weekly") return Array.isArray(h.weekdays)&&h.weekdays.includes(wd);
+  if(h.frequency==="monthly") return true; // mensuel = libre, on suit la progression du mois
+  return true;
+}
+function streak(h){
+  const logs=state.logs[h.id]||{}; let s=0;
+  if(h.frequency==="daily"){
+    for(;;){ const d=new Date(); d.setDate(d.getDate()-s);
+      const iso=d.toISOString().slice(0,10); if(logs[iso]) s++; else break; }
+  }else if(h.frequency==="weekly"){
+    // suite de semaines où AU MOINS un jour de la semaine cochée est validé
+    const doneWeeks=new Set(Object.keys(logs).map(k=>{
+      const d=new Date(k); const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+      const day=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()-day+3);
+      const wk1=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+      const w=Math.floor(1+(t-wk1)/604800000); return t.getUTCFullYear()+"-"+w;
+    }));
+    let y=(d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-day+3);return t.getUTCFullYear()})(new Date());
+    let w=(d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-day+3);const wk1=new Date(Date.UTC(t.getUTCFullYear(),0,4));return Math.floor(1+(t-wk1)/604800000)})(new Date());
+    for(;;){ const key=y+"-"+w; if(doneWeeks.has(key)){ s++; w--; if(w<=0){y--; w=52;} } else break; }
+  }else{
+    const doneMonths=new Set(Object.keys(state.logs[h.id]||{}).map(k=>k.slice(0,7)));
+    let y=today.getFullYear(), m=today.getMonth()+1;
+    for(;;){ const key=y+"-"+String(m).padStart(2,'0'); if(doneMonths.has(key)){ s++; m--; if(m<=0){y--; m=12;} } else break; }
+  }
+  return s;
+}
+function currentProgress(h){
+  const logs=state.logs[h.id]||{};
+  if(h.frequency==="daily") return logs[todayISO]?1:0;
+  if(h.frequency==="weekly"){
+    // compter validations aujourd’hui uniquement si due aujourd’hui ? => on compte toute la semaine
+    const yearWeek=(d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-day+3);const wk1=new Date(Date.UTC(t.getUTCFullYear(),0,4));return [t.getUTCFullYear(),Math.floor(1+(t-wk1)/604800000)]})(new Date());
+    let c=0; for(const k of Object.keys(logs)){ const d=new Date(k); const yw=yearWeek; const ywk=(d2=>{const t=new Date(Date.UTC(d2.getFullYear(),d2.getMonth(),d2.getDate()));const day=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-day+3);const wk1=new Date(Date.UTC(t.getUTCFullYear(),0,4));return [t.getUTCFullYear(),Math.floor(1+(t-wk1)/604800000)]})(d); if(ywk[0]===yw[0]&&ywk[1]===yw[1]) c++; }
+    return c;
+  }
+  // monthly
+  const key=todayISO.slice(0,7); let c=0; for(const k of Object.keys(logs)){ if(k.slice(0,7)===key) c++; } return c;
+}
+
+/* ====== Toggle ====== */
+function toggle(hid, iso){
+  state.logs[hid]=state.logs[hid]||{};
+  state.logs[hid][iso] = state.logs[hid][iso]?0:1;
+  if(state.logs[hid][iso]===0) delete state.logs[hid][iso];
+  db.save(state); render();
+}
+
+/* ====== Rendu ====== */
+function render(){
+  const q=$("#q").value.trim().toLowerCase();
+  const dueOnly=$("#dueOnly").checked;
+
+  const daily=state.habits.filter(h=>h.frequency==="daily" && (!q || h.name.toLowerCase().includes(q)) && (!dueOnly || isDueToday(h)));
+  const weekly=state.habits.filter(h=>h.frequency==="weekly" && (!q || h.name.toLowerCase().includes(q)) && (!dueOnly || isDueToday(h)));
+  const monthly=state.habits.filter(h=>h.frequency==="monthly" && (!q || h.name.toLowerCase().includes(q)) && (!dueOnly || isDueToday(h)));
+
+  const renderList=(arr,root)=>{
+    root.innerHTML="";
+    if(arr.length===0){ root.innerHTML=`<div class="muted">Aucune habitude.</div>`; return;}
+    // Rendu compact (nom + actions à droite)
+    arr.forEach(h=>{
+      const logs=state.logs[h.id]||{}; const done=!!logs[todayISO];
+      const div=document.createElement("div"); div.className="item";
+      const wdays = Array.isArray(h.weekdays)? h.weekdays : [];
+      const wtxt = h.frequency==="weekly" ? " · " + ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"].filter((_,i)=>wdays.includes(i)).join(", ") : "";
+      div.innerHTML=`
+        <div>
+          <div class="name">${h.name}</div>
+          <div class="sub">
+            <span class="badge">${h.frequency}</span>
+            <span class="badge">Streak ${streak(h)}</span>
+            <span class="badge">Obj ${currentProgress(h)}/${h.goal}</span>
+            ${wtxt?`<span class="badge">${wtxt}</span>`:""}
+          </div>
+        </div>
+        <div class="row">
+          <div class="check ${done?'done':''}" data-h="${h.id}" title="Valider aujourd’hui"></div>
+        </div>`;
+      root.appendChild(div);
+    });
+    // interactions
+    root.querySelectorAll(".check").forEach(b=>{
+      b.onclick=()=>{ toggle(b.dataset.h, todayISO); };
+    });
+  };
+
+  renderList(daily,$("#listDaily"));
+  renderList(weekly,$("#listWeekly"));
+  renderList(monthly,$("#listMonthly"));
+
+  // KPIs rapides
+  $("#kpiDaily").textContent = `Quotidien dues: ${daily.length}`;
+  $("#kpiWeekly").textContent = `Hebdo dues: ${weekly.length}`;
+  $("#kpiMonthly").textContent = `Mensuel actives: ${monthly.length}`;
+}
+
+/* ====== Import/Export + Install ====== */
+$("#btnExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="habits-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("#btnImport").onclick=()=>$("#fileImport").click();
+$("#fileImport").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=()=>{ try{
+    const data=JSON.parse(r.result); if(!data.habits||!data.logs) throw 0; state=data; db.save(state); render();
+  }catch{ alert("Fichier invalide"); } }; r.readAsText(f);
+};
+
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$("#btnInstall").style.display="inline-block";});
+$("#btnInstall").onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; $("#btnInstall").style.display="none"; };
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+
+/* ====== Search/dueOnly events ====== */
+$("#q").oninput=render; $("#dueOnly").onchange=render; $("#groupBy").onchange=render;
+
+/* ====== Init ====== */
+render();
+</script>
+</body>
+</html>
