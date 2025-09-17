@@ -1,189 +1,406 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Habitudes</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111">
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"/>
+<title>Habits — Aujourd'hui</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111111">
 <style>
-:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--mut:#9aa3b2;--acc:#48c78e;--grid:#20242e;--ok:#173d2e;--ok2:#1ea874}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial}
-header,footer{position:sticky;z-index:10;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35))}
-header{top:0;padding:.8rem 1rem;display:flex;gap:.5rem;align-items:center;justify-content:space-between}
-footer{bottom:0;padding:.6rem 1rem;display:flex;gap:.5rem;justify-content:space-between}
-.btn{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
-.wrap{padding:1rem;display:flex;flex-direction:column;gap:1rem}
-.card{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:.9rem}
-.hsec{margin-top:.4rem}.hsec>summary{list-style:none;cursor:pointer;font-weight:700}
-.hsec>summary::-webkit-details-marker{display:none}
-.item{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--grid);padding:.65rem .2rem}
-.name{font-weight:600}.sub{font-size:.85rem;color:var(--mut)}
-.check{width:26px;height:26px;border:2px solid #3a4150;border-radius:8px;background:#0c0f15}
-.done{background:linear-gradient(180deg,#59dcac,#21b37f);border-color:var(--ok2);position:relative}
-.done:after{content:"";position:absolute;left:7px;top:3px;width:7px;height:14px;border:3px solid #0b2c20;border-left:0;border-top:0;transform:rotate(45deg)}
-.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.mut{color:var(--mut);font-size:.9rem}
-.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--mut)}
-.okline{background:var(--ok);border-radius:10px;padding:.35rem .5rem}
-.search{background:#0c0e13;border:1px solid var(--grid);color:var(--ink);border-radius:10px;padding:.55rem .7rem;flex:1}
-</style></head><body>
+:root{
+  --bg:#0f1115; --card:#151821; --text:#e8eaf0; --muted:#9aa3b2;
+  --accent:#48c78e; --danger:#ff6b6b; --glass:rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial; -webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;padding:12px;display:flex;gap:8px;align-items:center;background:linear-gradient(rgba(0,0,0,0.12),transparent)}
+.brand{font-weight:700;font-size:18px}
+.topbar{margin-left:auto;display:flex;gap:8px;align-items:center}
+.iconbtn{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:10px;color:var(--text)}
+.container{padding:14px}
+.progressbar{height:10px;background:var(--glass);border-radius:8px;overflow:hidden;margin:8px 0}
+.progress{height:100%;background:linear-gradient(90deg,var(--accent),#2bbf7b);width:0%}
+.row{display:flex;gap:8px;align-items:center}
+.search{flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:#0c0f13;color:var(--text)}
+.section{margin-top:12px}
+.section-title{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-weight:700}
+.card{background:var(--card);border-radius:12px;padding:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.03)}
+.habit{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;transition:all .18s;touch-action:pan-y;user-select:none}
+.habit + .habit{margin-top:8px}
+.h-left{display:flex;gap:10px;align-items:center}
+.color-dot{width:12px;height:12px;border-radius:6px;flex:0 0 12px;border:2px solid rgba(0,0,0,0.2)}
+.h-name{font-weight:600}
+.h-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.check{width:42px;height:42px;border-radius:10px;border:2px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-weight:700;background:transparent}
+.check.done{background:linear-gradient(180deg,#59dcac,#21b37f);color:#052616;border-color:#1ea874}
+.habit.done{background:linear-gradient(90deg, rgba(72,199,142,0.08), rgba(72,199,142,0.03));box-shadow:0 6px 18px rgba(0,0,0,0.35)}
+.small{font-size:12px;color:var(--muted)}
+.tabbar{position:fixed;left:0;right:0;bottom:10px;margin:0 12px;display:flex;justify-content:space-around;background:linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.14));padding:8px;border-radius:14px;border:1px solid rgba(255,255,255,0.02)}
+.tab{padding:8px 12px;border-radius:10px;color:var(--muted)}
+.tab.active{background:var(--accent);color:#06140d;font-weight:700}
+.fab{position:fixed;right:22px;bottom:86px;background:var(--accent);color:#06140d;padding:14px;border-radius:14px;border:0;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+.kpi{display:flex;gap:8px;align-items:center;margin-top:8px}
+.badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,0.03);font-size:12px}
+.modal{position:fixed;left:12px;right:12px;bottom:12px;background:var(--card);border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 20px 40px rgba(0,0,0,0.6)}
+.color-palette{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.color-swatch{width:32px;height:32px;border-radius:8px;border:2px solid rgba(0,0,0,0.2)}
+.switch{display:inline-flex;align-items:center;gap:8px}
+.confetti-canvas{position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:9999}
+.light{ --bg:#f7f8fb; --card:#ffffff; --text:#0b0f12; --muted:#6b7280; --glass:rgba(0,0,0,0.03)}
+.hidden{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:160px;background:#111;border-radius:10px;padding:8px 12px;color:white;opacity:.95}
+</style>
+</head>
+<body>
 <header>
-  <div class="row">
-    <a href="settings.html" style="text-decoration:none"><button class="btn ghost">Gestion</button></a>
-    <a href="stats.html" style="text-decoration:none"><button class="btn ghost">Stats</button></a>
-  </div>
-  <div class="row">
-    <input id="q" class="search" placeholder="Rechercher…">
-    <button id="due" class="btn ghost">Due aujourd’hui</button>
+  <div class="brand">Habits</div>
+  <div class="topbar">
+    <button id="themeBtn" class="iconbtn iconbtn-small" title="Thème">🌓</button>
+    <a href="stats.html" class="iconbtn">📊</a>
+    <a href="settings.html" class="iconbtn">⚙️</a>
   </div>
 </header>
 
-<div class="wrap">
-  <div class="card">
-    <div class="row"><span class="mut">Aujourd’hui :</span><span id="today" class="badge"></span></div>
-    <div class="row"><span id="kpi" class="badge">0 fait / 0 dû</span></div>
+<main class="container">
+  <div class="row">
+    <input id="search" class="search" placeholder="Rechercher une habitude...">
+    <button id="dueBtn" class="iconbtn">Due</button>
   </div>
 
-  <div class="card">
-    <details class="hsec" open><summary>Matin</summary><div id="list-morning"></div></details>
-    <details class="hsec" open><summary>Journée</summary><div id="list-day"></div></details>
-    <details class="hsec" open><summary>Soir</summary><div id="list-evening"></div></details>
-    <details class="hsec" open><summary>Hebdo du jour</summary><div id="list-weekly"></div></details>
-    <details class="hsec" open><summary>Habitudes de vie</summary><div id="list-life"></div></details>
+  <div style="margin-top:10px">
+    <div class="small">Progression quotidienne</div>
+    <div class="progressbar"><div id="progress" class="progress"></div></div>
+    <div id="progressText" class="small">0/0 faits (0%)</div>
   </div>
-  <div class="mut">Astuce : appui long → Archiver / Supprimer.</div>
+
+  <!-- Sections -->
+  <div id="sections" class="section">
+    <!-- generated -->
+  </div>
+</main>
+
+<button id="quickAdd" class="fab">➕ Ajouter</button>
+
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div style="display:flex;gap:8px;align-items:center">
+    <input id="hName" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" placeholder="Nouvelle habitude (ex. Boire 1L)"/>
+    <button id="quickSave" class="iconbtn">Ajouter</button>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div class="switch">
+      <label><input id="typeDaily" type="radio" name="type" checked> Quotidienne</label>
+    </div>
+    <div class="switch">
+      <label><input id="typeWeekly" type="radio" name="type"> Hebdomadaire</label>
+    </div>
+    <div class="switch">
+      <label><input id="typeLife" type="radio" name="type"> Vie</label>
+    </div>
+  </div>
+  <div id="slotRow" style="margin-top:8px;display:flex;gap:8px">
+    <button data-slot="morning" class="iconbtn">🌅 Matin</button>
+    <button data-slot="day" class="iconbtn">🌞 Journée</button>
+    <button data-slot="evening" class="iconbtn">🌙 Soir</button>
+  </div>
+
+  <div id="weekdaysRow" style="margin-top:8px;display:none;gap:6px">
+    <label><input type="checkbox" data-day="1">L</label>
+    <label><input type="checkbox" data-day="2">Ma</label>
+    <label><input type="checkbox" data-day="3">Me</label>
+    <label><input type="checkbox" data-day="4">J</label>
+    <label><input type="checkbox" data-day="5">V</label>
+    <label><input type="checkbox" data-day="6">S</label>
+    <label><input type="checkbox" data-day="0">D</label>
+  </div>
+
+  <div style="margin-top:8px">
+    <label>Couleur</label>
+    <div id="palette" class="color-palette"></div>
+  </div>
+
+  <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+    <label><input id="required" type="checkbox"> Indispensable</label>
+    <label style="margin-left:12px">Objectif flex:
+      <select id="objType">
+        <option value="perday">Par jour (1)</option>
+        <option value="perweek">X fois / semaine</option>
+        <option value="permonth">X fois / mois</option>
+      </select>
+    </label>
+    <input id="objValue" type="number" value="1" style="width:60px;margin-left:6px"/>
+  </div>
 </div>
 
-<footer>
-  <button id="export" class="btn ghost">Exporter</button>
-  <input type="file" id="import" accept="application/json" style="display:none">
-  <button id="importBtn" class="btn ghost">Importer</button>
-  <button id="install" class="btn" style="display:none">Installer</button>
-</footer>
+<canvas id="confetti" class="confetti-canvas"></canvas>
+<div id="toast" class="toast hidden"></div>
+
+<nav class="tabbar" role="navigation" aria-label="Navigation">
+  <div class="tab active" data-tab="hab">Habitudes</div>
+  <a class="tab" href="stats.html">Stats</a>
+  <a class="tab" href="settings.html">Gestion</a>
+</nav>
 
 <script>
-/* ========== Storage & modèle ========== */
-const DBK="habapp.v3";
-const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
-const db={load(){try{return JSON.parse(localStorage.getItem(DBK))||{version:3,habits:[],logs:{},settings:{}}}catch{return{version:3,habits:[],logs:{},settings:{}}}},save(x){localStorage.setItem(DBK,JSON.stringify(x))}};
-let state=db.load();
-/* habit = {id,name,type:'daily'|'weekly'|'lifestyle',slot:'morning'|'day'|'evening'|null,weekdays:[0..6],required:boolean,goal:{d:1,w:1,m:0},archived:boolean,created_at} */
+/* ========== App core ========== */
+const DBK="habapp.v4";
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+let state = JSON.parse(localStorage.getItem(DBK)||'{"version":4,"habits":[],"logs":{},"settings":{"theme":"auto","accent":"#48c78e"}}');
 
-const today = new Date(); const tzfix = d=>new Date(d.getTime()-d.getTimezoneOffset()*60000);
-const todayISO = tzfix(today).toISOString().slice(0,10);
-const wd = today.getDay(); // 0=Dim..6=Sam
-$("#today").textContent = today.toLocaleDateString('fr-CH',{weekday:'long',day:'2-digit',month:'long'});
+const today = new Date();
+const tzFix = d=> new Date(d.getTime()-d.getTimezoneOffset()*60000);
+const todayISO = tzFix(new Date()).toISOString().slice(0,10);
+const wd = (new Date()).getDay(); // 0=Sun
 
-/* ========== Due logic ========== */
-const isDue = (h) => {
-  if(h.archived) return false;
-  if(h.type==='daily') return true;
-  if(h.type==='weekly') return (h.weekdays||[]).includes(wd);
-  if(h.type==='lifestyle') return true;
-  return true;
-};
+/* Utilities */
+function save(){ localStorage.setItem(DBK, JSON.stringify(state)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function showToast(txt, timeout=2000){ const t=$("#toast"); t.textContent=txt; t.classList.remove("hidden"); setTimeout(()=>t.classList.add("hidden"), timeout); }
 
-/* ========== Render ========== */
-function render(){
-  const q = $("#q").value.trim().toLowerCase();
-  const dueOnly = $("#due").classList.contains("on");
-
-  const lists = {
-    morning: $("#list-morning"), day: $("#list-day"), evening: $("#list-evening"),
-    weekly: $("#list-weekly"), life: $("#list-life")
-  };
-  Object.values(lists).forEach(el=>el.innerHTML="");
-
-  const logs = state.logs||{};
-  let dueCount=0, doneCount=0;
-
-  state.habits.filter(h=>!h.archived).forEach(h=>{
-    if(q && !h.name.toLowerCase().includes(q)) return;
-    const due = isDue(h);
-    if(dueOnly && !due) return;
-
-    const done = !!(logs[h.id] && logs[h.id][todayISO]);
-    if(due) { dueCount++; if(done) doneCount++; }
-
-    const div=document.createElement("div"); div.className="item"+(done?" okline":"");
-    div.innerHTML = `
-      <div>
-        <div class="name">${h.name}</div>
-        <div class="sub">
-          <span class="badge">${h.type}</span>
-          ${h.type==='daily' && h.slot? `<span class="badge">${h.slot}</span>`:""}
-          ${h.type==='weekly'? `<span class="badge">jours:${(h.weekdays||[]).map(i=>["D","L","Ma","Me","J","V","S"][i]).join("")||"-"}</span>`:""}
-          ${h.required? `<span class="badge">indispensable</span>`:""}
-        </div>
-      </div>
-      <div class="check ${done?'done':''}" data-h="${h.id}"></div>
-    `;
-    // appui long → menu
-    let t=null;
-    div.addEventListener("touchstart",()=>{ t=setTimeout(()=>{ menu(h); },600); });
-    div.addEventListener("touchend",()=>{ clearTimeout(t); });
-    // click sur la check
-    div.querySelector(".check").onclick = (e)=>{ toggle(h.id,todayISO); };
-    // dispatch dans la bonne section
-    if(h.type==='daily'){
-      lists[h.slot||'day'].appendChild(div);
-    }else if(h.type==='weekly'){
-      lists.weekly.appendChild(div);
-    }else{
-      lists.life.appendChild(div);
-    }
-  });
-
-  $("#kpi").textContent = `${doneCount} fait / ${dueCount} dû`;
+/* Theme */
+function applyTheme(){
+  const th = state.settings.theme || 'auto';
+  if(th==='auto'){
+    const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('light', !dark);
+  } else {
+    document.documentElement.classList.toggle('light', th==='light');
+  }
+  document.documentElement.style.setProperty('--accent', state.settings.accent || '#48c78e');
 }
-function toggle(hid, iso){
-  state.logs[hid]=state.logs[hid]||{};
-  state.logs[hid][iso] = state.logs[hid][iso]?0:1;
-  if(state.logs[hid][iso]===0) delete state.logs[hid][iso];
-  db.save(state); render();
+applyTheme();
+
+/* Palette */
+const COLORS = ['#48c78e','#2E86AB','#E27D60','#E8A87C','#C38D9E','#6A9A8B','#F6C85F','#9AD3BC','#7FB069','#A9A9F5','#FFA7C4','#8DD3C7','#FFB347','#B39CD0'];
+const paletteEl = $("#palette");
+COLORS.forEach(c=>{
+  const b=document.createElement('button'); b.className='color-swatch'; b.style.background=c;
+  b.onclick=()=>{ selColor=c; highlightPalette(c); };
+  paletteEl.appendChild(b);
+});
+let selColor = state.settings.accent || '#48c78e';
+function highlightPalette(c){
+  $$(".color-swatch").forEach(b=>b.style.outline = b.style.background===c ? '3px solid rgba(255,255,255,0.12)' : 'none');
 }
-function menu(h){
-  const act = prompt("Action: archive / delete / cancel","archive");
-  if(!act) return;
-  if(act.toLowerCase()==='archive'){ h.archived=true; db.save(state); render(); }
-  else if(act.toLowerCase()==='delete'){
-    if(confirm("Supprimer définitivement ? Historique perdu.")){
-      state.habits = state.habits.filter(x=>x.id!==h.id);
-      delete state.logs[h.id]; db.save(state); render();
-    }
+highlightPalette(selColor);
+
+/* Sections definition */
+const SECTIONS = [
+  {id:'morning', title:'Matin', icon:'🌅'},
+  {id:'day', title:'Journée', icon:'🌞'},
+  {id:'evening', title:'Soir', icon:'🌙'},
+  {id:'weekly', title:'Hebdo du jour', icon:'📅'},
+  {id:'life', title:'Vie', icon:'❤️'}
+];
+
+function ensureSeed(){
+  if(!state.habits || state.habits.length===0){
+    const nowId = uid();
+    state.habits = [
+      {id:uid(),name:"Boire 500ml",type:"daily",slot:"morning",color:COLORS[0],required:false,objective:{mode:"perday",value:1},archived:false,created:todayISO},
+      {id:uid(),name:"Courir 20 min",type:"weekly",weekdays:[1,3,5],color:COLORS[1],required:false,objective:{mode:"perweek",value:3},archived:false,created:todayISO},
+      {id:uid(),name:"Respecter régime 1800 kcal",type:"lifestyle",color:COLORS[2],required:true,objective:{mode:"permonth",value:20},archived:false,created:todayISO}
+    ];
+    save();
   }
 }
+ensureSeed();
 
-/* ========== Import/Export/PWA ========== */
-$("#export").onclick=()=>{
-  const blob=new Blob([JSON.stringify(state)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="habits-backup.json"; a.click(); URL.revokeObjectURL(a.href);
-};
-$("#importBtn").onclick=()=>$("#import").click();
-$("#import").onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=()=>{ try{
-    const data=JSON.parse(r.result);
-    if(!data.habits||!data.logs) throw 0;
-    state=data; db.save(state); render();
-  }catch{ alert("Fichier invalide"); } };
-  r.readAsText(f);
-};
-let deferred=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$("#install").style.display="inline-block";});
-$("#install").onclick=async()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; $("#install").style.display="none"; };
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+/* Render */
+function render(){
+  const container = $("#sections"); container.innerHTML="";
+  const q = $("#search").value.trim().toLowerCase();
+  let totalDue=0, totalDone=0;
 
-/* ========== UI events ========== */
-$("#q").oninput=render;
-$("#due").onclick=()=>{ $("#due").classList.toggle("on"); $("#due").classList.toggle("btn"); $("#due").classList.toggle("ghost"); render(); };
+  SECTIONS.forEach(sec=>{
+    const card=document.createElement('div'); card.className='card';
+    const title=document.createElement('div'); title.className='section-title';
+    title.innerHTML = `<div style="font-weight:800">${sec.icon} ${sec.title}</div><div style="margin-left:auto" class="small"></div>`;
+    card.appendChild(title);
+    const list = document.createElement('div');
+    // filter habits by section
+    const items = state.habits.filter(h=>{
+      if(h.archived) return false;
+      if(q && !h.name.toLowerCase().includes(q)) return false;
+      if(sec.id==='weekly') return h.type==='weekly' && (h.weekdays||[]).includes(wd);
+      if(sec.id==='life') return h.type==='lifestyle';
+      return h.type==='daily' && h.slot===sec.id;
+    });
+    items.forEach(h=>{
+      // due?
+      const due = (h.type==='daily' || h.type==='lifestyle' || (h.type==='weekly' && (h.weekdays||[]).includes(wd)));
+      if(due) totalDue++;
+      const done = !!(state.logs[h.id] && state.logs[h.id][todayISO]);
+      if(done) totalDone++;
+      const el = document.createElement('div'); el.className='habit'+(done?' done':'');
+      el.setAttribute('data-id', h.id);
+      el.style.position='relative';
+      el.innerHTML = `
+        <div class="h-left">
+          <div class="color-dot" style="background:${h.color||selColor}"></div>
+          <div>
+            <div class="h-name">${h.name}</div>
+            <div class="h-meta">${h.type}${h.type==='daily' && h.slot ? ' · '+h.slot : ''}${h.type==='weekly' ? ' · ' + (h.weekdays||[]).map(d=>['D','L','Ma','Me','J','V','S'][d]).join('') : ''} ${h.required? ' · indispensable':''}</div>
+          </div>
+        </div>
+        <div class="check ${done?'done':''}" data-id="${h.id}">${done? '✓': ''}</div>
+      `;
+      // events
+      // tap on check
+      el.querySelector('.check').addEventListener('click', (ev)=>{
+        ev.stopPropagation(); toggle(h.id,todayISO);
+      });
+      // tap on row to toggle
+      el.addEventListener('click', ()=>{ toggle(h.id,todayISO); });
+      // swipe gestures
+      addSwipe(el, h);
+      list.appendChild(el);
+    });
+    card.appendChild(list);
+    container.appendChild(card);
+  });
 
-/* ========== Init (seed si vide) ========== */
-if(!state.habits || state.habits.length===0){
-  const now=Date.now();
-  state.habits=[
-    {id:String(now+1),name:"Eau 500ml",type:"daily",slot:"morning",weekdays:[],required:true,goal:{d:1,w:0,m:0},archived:false,created_at:todayISO},
-    {id:String(now+2),name:"Course 20 min",type:"weekly",slot:null,weekdays:[1,3,5],required:false,goal:{d:0,w:3,m:0},archived:false,created_at:todayISO},
-    {id:String(now+3),name:"Alimentation 1800 kcal",type:"lifestyle",slot:null,weekdays:[],required:true,goal:{d:1},archived:false,created_at:todayISO}
-  ];
-  db.save(state);
+  // progress
+  const percent = totalDue? Math.round(totalDone/totalDue*100) : 0;
+  $("#progress").style.width = percent + "%";
+  $("#progressText").textContent = `${totalDone}/${totalDue} faits (${percent}%)`;
 }
+
+/* Toggle log */
+function toggle(hid, iso){
+  state.logs[hid] = state.logs[hid]||{};
+  state.logs[hid][iso] = state.logs[hid][iso] ? 0 : 1;
+  if(state.logs[hid][iso]===0) delete state.logs[hid][iso];
+  save();
+  render();
+  // confetti if section full
+  checkSectionComplete();
+}
+
+/* Swipe handling */
+function addSwipe(el, habit){
+  let startX=0, currentX=0, touching=false;
+  el.addEventListener('touchstart', e=>{ startX=e.touches[0].clientX; touching=true; el.style.transition='none'; });
+  el.addEventListener('touchmove', e=>{ if(!touching) return; currentX = e.touches[0].clientX - startX; el.style.transform = `translateX(${currentX}px)`; });
+  el.addEventListener('touchend', e=>{ touching=false; el.style.transition='transform .2s'; if(currentX > 100){ // right swipe -> archive
+      const id=el.dataset.id; archiveById(id); showToast("Archivée"); el.style.transform='translateX(0)'; render();
+    } else if(currentX < -100){
+      const id=el.dataset.id; if(confirm("Supprimer définitivement ?")){ deleteById(id); showToast("Supprimée"); }
+      el.style.transform='translateX(0)'; render();
+    } else { el.style.transform='translateX(0)'; }
+    startX=currentX=0;
+  });
+}
+
+/* archive / delete */
+function archiveById(id){ const h = state.habits.find(x=>x.id===id); if(h){ h.archived=true; save(); } }
+function deleteById(id){ state.habits = state.habits.filter(x=>x.id!==id); delete state.logs[id]; save(); }
+
+/* Section complete => confetti */
+function checkSectionComplete(){
+  // if all due items in a section are done -> confetti
+  SECTIONS.forEach(sec=>{
+    const items = state.habits.filter(h=>{
+      if(h.archived) return false;
+      if(sec.id==='weekly') return h.type==='weekly' && (h.weekdays||[]).includes(wd);
+      if(sec.id==='life') return h.type==='lifestyle';
+      return h.type==='daily' && h.slot===sec.id;
+    });
+    if(items.length===0) return;
+    const allDone = items.every(h => state.logs[h.id] && state.logs[h.id][todayISO]);
+    if(allDone) fireConfetti();
+  });
+}
+
+/* Confetti simple */
+const confettiCanvas = $("#confetti");
+const ctx = confettiCanvas.getContext && confettiCanvas.getContext('2d');
+let confettiPieces = [];
+function resizeCanvas(){ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+function fireConfetti(){
+  if(!ctx) return;
+  // generate pieces
+  for(let i=0;i<60;i++){
+    confettiPieces.push({
+      x: Math.random()*confettiCanvas.width,
+      y: -10 - Math.random()*200,
+      vx: (Math.random()-0.5)*4,
+      vy: 2+Math.random()*4,
+      r: 4+Math.random()*6,
+      color: COLORS[Math.floor(Math.random()*COLORS.length)],
+      rot: Math.random()*360,
+      rov: (Math.random()-0.5)*10
+    });
+  }
+  animateConfetti();
+}
+let confettiAnimating=false;
+function animateConfetti(){
+  if(confettiAnimating) return;
+  confettiAnimating=true;
+  function step(){
+    ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    confettiPieces.forEach((p,i)=>{
+      p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.rov;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r/2,-p.r/2,p.r, p.r*0.6);
+      ctx.restore();
+      if(p.y > confettiCanvas.height + 50){ confettiPieces.splice(i,1); }
+    });
+    if(confettiPieces.length>0) requestAnimationFrame(step); else confettiAnimating=false;
+  }
+  requestAnimationFrame(step);
+}
+
+/* Quick add modal logic */
+const modal = $("#modal");
+$("#quickAdd").addEventListener('click', ()=>{ modal.classList.remove('hidden'); $("#hName").focus(); });
+$("#quickSave").addEventListener('click', ()=>{ quickSave(); });
+function quickSave(){
+  const name = $("#hName").value.trim(); if(!name) return alert("Nom requis");
+  const type = $("#typeWeekly").checked ? 'weekly' : ($("#typeLife").checked ? 'lifestyle' : 'daily');
+  const slot = document.querySelector('[data-slot].selected') ? document.querySelector('[data-slot].selected').dataset.slot : (document.querySelector('[data-slot]')?document.querySelector('[data-slot]').dataset.slot:null);
+  const weekdays = Array.from(document.querySelectorAll('#weekdaysRow input[type=checkbox]')).filter(i=>i.checked).map(i=>Number(i.dataset.day));
+  const required = $("#required").checked;
+  const objMode = $("#objType").value, objVal = Number($("#objValue").value)||1;
+  const h = { id:uid(), name, type, slot: type==='daily'?slot:null, weekdays: type==='weekly'?weekdays:[], color: selColor, required, objective:{mode:objMode,value:objVal}, archived:false, created: todayISO};
+  state.habits.push(h); state.logs[h.id]=state.logs[h.id]||{}; save(); modal.classList.add('hidden'); $("#hName").value=''; render(); showToast("Habitude ajoutée");
+}
+
+/* slot buttons */
+$$('[data-slot]').forEach(b=>{
+  b.addEventListener('click', ()=>{ $$('[data-slot]').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); });
+});
+
+/* toggle UI for weekly */
+$("#typeWeekly").addEventListener('change', ()=>{ $("#weekdaysRow").style.display = $("#typeWeekly").checked ? 'flex' : 'none'; $("#slotRow").style.display = $("#typeWeekly").checked ? 'none' : 'flex'; });
+$("#typeDaily").addEventListener('change', ()=>{ $("#weekdaysRow").style.display = 'none'; $("#slotRow").style.display = 'flex'; });
+$("#typeLife").addEventListener('change', ()=>{ $("#weekdaysRow").style.display = 'none'; $("#slotRow").style.display = 'none'; });
+
+/* Search / Due toggle */
+$("#search").addEventListener('input', render);
+$("#dueBtn").addEventListener('click', ()=>{
+  $("#dueBtn").classList.toggle('active');
+  if($("#dueBtn").classList.contains('active')) { $("#search").value=''; $("#search").disabled=true; // show due only by filtering in render
+  } else { $("#search").disabled=false; }
+  render();
+});
+
+/* Theme button */
+$("#themeBtn").addEventListener('click', ()=>{
+  const th = state.settings.theme==='dark' ? 'light' : (state.settings.theme==='light' ? 'auto' : 'dark');
+  state.settings.theme = th; save(); applyTheme(); showToast("Thème: "+th);
+});
+
+/* Export/Import */
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); window.deferredPrompt = e; });
+$("#quickAdd").addEventListener('contextmenu', e=>{ e.preventDefault(); }); // block long menu
+
+/* init */
 render();
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>console.log('SW failed')); }
 </script>
-</body></html>
+</body>
+</html>
