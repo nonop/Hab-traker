@@ -1,0 +1,147 @@
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Stats</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111">
+<style>
+:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--mut:#9aa3b2;--acc:#48c78e;--grid:#20242e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial}
+header{position:sticky;top:0;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35));padding:.8rem 1rem;display:flex;gap:.5rem;justify-content:space-between}
+.wrap{padding:1rem;display:flex;flex-direction:column;gap:1rem}
+.card{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:.9rem}
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--mut)}
+.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--grid);padding:.45rem .3rem}
+.btn{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
+canvas{width:100%;height:220px;background:#0c0e13;border:1px solid var(--grid);border-radius:10px}
+</style></head><body>
+<header>
+  <a href="index.html" style="text-decoration:none"><button class="btn ghost">← Habitudes</button></a>
+  <a href="settings.html" style="text-decoration:none"><button class="btn ghost">Gestion</button></a>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <button class="btn ghost" data-v="day">Jour</button>
+      <button class="btn ghost" data-v="week">Semaine</button>
+      <button class="btn ghost" data-v="month">Mois</button>
+      <button class="btn ghost" data-v="year">Année</button>
+      <span class="badge" id="summary"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Top habitudes</h3>
+    <table class="table" id="top"><thead><tr><th>Habitude</th><th>Taux</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+
+<script>
+const DBK="habapp.v3";
+let state = JSON.parse(localStorage.getItem(DBK)||'{"version":3,"habits":[],"logs":{},"settings":{}}');
+const activeHab = state.habits.filter(h=>!h.archived);
+const logs = state.logs||{};
+const $=s=>document.querySelector(s);
+const today = new Date(); const tzfix = d=>new Date(d.getTime()-d.getTimezoneOffset()*60000);
+const iso = d=>tzfix(d).toISOString().slice(0,10);
+const startOfDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const startOfWeek=d=>{const x=new Date(startOfDay(d));const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;}
+const startOfMonth=d=>new Date(d.getFullYear(),d.getMonth(),1);
+const startOfYear=d=>new Date(d.getFullYear(),0,1);
+function datesBetween(a,b){const out=[];const x=new Date(a);while(x<=b){out.push(new Date(x));x.setDate(x.getDate()+1);}return out;}
+
+function dueOn(h,d){
+  if(h.archived) return false;
+  if(h.type==='daily') return true;
+  if(h.type==='weekly'){ return (h.weekdays||[]).includes(d.getDay()); }
+  if(h.type==='lifestyle') return true;
+  return true;
+}
+function rateForRange(h, dates){
+  let due=0, done=0;
+  dates.forEach(dt=>{
+    if(dueOn(h,dt)){ due++; if(logs[h.id] && logs[h.id][iso(dt)]) done++; }
+  });
+  return {due,done,rate: due? done/due : 0};
+}
+
+function viewDay(){
+  const a=startOfDay(today), b=a;
+  renderChart(datesBetween(a,b),"Jour");
+}
+function viewWeek(){
+  const a=startOfWeek(today), b=new Date(a); b.setDate(a.getDate()+6);
+  renderChart(datesBetween(a,b),"Semaine");
+}
+function viewMonth(){
+  const a=startOfMonth(today), b=new Date(a.getFullYear(),a.getMonth()+1,0);
+  renderChart(datesBetween(a,b),"Mois");
+}
+function viewYear(){
+  const a=startOfYear(today), b=new Date(a.getFullYear(),11,31);
+  renderChart(datesBetween(a,b),"Année");
+}
+
+function renderChart(dates,label){
+  // calc global per day (taux moyen)
+  const points = dates.map(d=>{
+    const rs = activeHab.map(h=>rateForRange(h,[d]));
+    const r = rs.reduce((s,x)=>s+x.rate,0)/(rs.length||1);
+    return {x:d, y:Math.round(r*100)};
+  });
+  $("#summary").textContent = `${label}: moyenne ${Math.round(points.reduce((s,p)=>s+p.y,0)/(points.length||1))}%`;
+  draw(points);
+  // top habits sur la plage
+  const habitsRates = activeHab.map(h=>{
+    const r=rateForRange(h,dates);
+    return {name:h.name, rate: (r.due? r.done/r.due : 0)};
+  }).sort((a,b)=>b.rate-a.rate).slice(0,5);
+  const tb=$("#top tbody"); tb.innerHTML="";
+  habitsRates.forEach(x=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${x.name}</td><td>${Math.round(x.rate*100)}%</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function draw(points){
+  const c=$("#chart"); const ctx=c.getContext("2d");
+  const w=c.width=c.clientWidth, h=c.height=c.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  // axes simples
+  ctx.strokeStyle="#2a2f3a"; ctx.beginPath(); ctx.moveTo(40,10); ctx.lineTo(40,h-30); ctx.lineTo(w-10,h-30); ctx.stroke();
+  // y ticks
+  ctx.fillStyle="#9aa3b2"; [0,25,50,75,100].forEach((v,i)=>{
+    const y = (h-30) - (h-40)*v/100;
+    ctx.fillText(String(v), 10, y+4); ctx.strokeStyle="#22262f"; ctx.beginPath(); ctx.moveTo(40,y); ctx.lineTo(w-10,y); ctx.stroke();
+  });
+  if(points.length===0) return;
+  // scale
+  const dx = (w-60)/Math.max(1,points.length-1);
+  // line
+  ctx.strokeStyle="#48c78e"; ctx.beginPath();
+  points.forEach((p,i)=>{
+    const x = 40 + i*dx; const y = (h-30) - (h-40)*p.y/100;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // dots
+  ctx.fillStyle="#48c78e";
+  points.forEach((p,i)=>{
+    const x = 40 + i*dx; const y = (h-30) - (h-40)*p.y/100;
+    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+  });
+}
+
+document.querySelectorAll("[data-v]").forEach(b=>{
+  b.onclick=()=>{ const v=b.dataset.v; if(v==="day") viewDay(); else if(v==="week") viewWeek(); else if(v==="month") viewMonth(); else viewYear(); };
+});
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+viewWeek(); // défaut
+</script>
+</body></html>
