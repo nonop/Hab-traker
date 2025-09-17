@@ -1,174 +1,151 @@
-<!doctype html>
-<html lang="fr">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Paramètres — Habits</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#111">
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Gestion</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111">
 <style>
-:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--muted:#9aa3b2;--acc:#48c78e;--grid:#20242e}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial}
-header{position:sticky;top:0;z-index:1;display:flex;gap:.6rem;align-items:center;justify-content:space-between;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35));padding:.75rem .9rem}
-h1{font-size:1.1rem;margin:0}
+:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--mut:#9aa3b2;--acc:#48c78e;--grid:#20242e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial}
+header{position:sticky;top:0;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35));padding:.8rem 1rem;display:flex;gap:.5rem;justify-content:space-between}
 .wrap{padding:1rem;display:flex;flex-direction:column;gap:1rem}
 .card{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:.9rem}
-.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
-.sp{flex:1}
-input[type=text],select,input[type=number],textarea{background:#0c0e13;border:1px solid var(--grid);color:var(--ink);border-radius:10px;padding:.55rem .7rem}
-button{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
-button.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
-.table{width:100%;border-collapse:collapse}
-.table th,.table td{border-bottom:1px solid var(--grid);padding:.5rem .3rem;vertical-align:top}
-.small{font-size:.85rem;color:var(--muted)}
-.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--muted)}
-.wdays{display:flex;gap:.3rem;flex-wrap:wrap}
-.wdays label{border:1px solid var(--grid);border-radius:8px;padding:.2rem .4rem}
-</style>
-</head>
-<body>
+.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.sp{flex:1}.mut{color:var(--mut)}
+input,select,textarea{background:#0c0e13;border:1px solid var(--grid);color:var(--ink);border-radius:10px;padding:.55rem .7rem}
+.btn{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
+.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--grid);padding:.45rem .3rem}
+.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--mut)}
+.wdays label{border:1px solid var(--grid);border-radius:8px;padding:.2rem .4rem;margin:.1rem;display:inline-block}
+</style></head><body>
 <header>
-  <h1>Paramètres</h1>
-  <div class="row">
-    <a href="index.html" style="text-decoration:none"><button class="ghost">Retour</button></a>
-  </div>
+  <a href="index.html" style="text-decoration:none"><button class="btn ghost">← Habitudes</button></a>
+  <a href="stats.html" style="text-decoration:none"><button class="btn ghost">Stats</button></a>
 </header>
 
 <div class="wrap">
   <div class="card">
     <div class="row">
-      <input id="name" class="sp" type="text" placeholder="Nom de l’habitude">
-      <select id="freq">
-        <option value="daily">Quotidien</option>
+      <input id="name" class="sp" placeholder="Nom de l’habitude">
+      <select id="type">
+        <option value="daily">Quotidienne</option>
         <option value="weekly">Hebdomadaire</option>
-        <option value="monthly">Mensuel</option>
+        <option value="lifestyle">Habitude de vie</option>
       </select>
-      <input id="goal" type="number" min="1" max="50" value="1" style="width:90px" title="Objectif par période">
-      <input id="weight" type="number" step="0.1" value="1.0" style="width:90px" title="Poids">
+      <select id="slot">
+        <option value="morning">Matin</option>
+        <option value="day">Journée</option>
+        <option value="evening">Soir</option>
+      </select>
+      <label class="row" style="gap:.3rem"><input type="checkbox" id="required"> <span class="mut">Indispensable</span></label>
     </div>
+    <div class="row wdays" id="wdays"></div>
     <div class="row">
-      <div class="wdays" id="wdays">
-        <!-- 0..6 Dim..Sam -->
-      </div>
+      <button id="add" class="btn">Ajouter</button>
     </div>
-    <div class="row">
-      <textarea id="notes" class="sp" rows="2" placeholder="Notes (optionnel)"></textarea>
-    </div>
-    <div class="row">
-      <button id="btnAdd">Ajouter</button>
-    </div>
-    <div class="small">Pour les hebdomadaires, coche les jours où l’habitude est due.</div>
+    <div class="mut">Hebdo : coche les jours où l’habitude est due. Quotidienne : choisis Matin/Journée/Soir. Vie : pas d’horaires.</div>
   </div>
 
   <div class="card">
     <table class="table" id="tbl">
-      <thead>
-        <tr>
-          <th>Nom</th><th>Freq</th><th>Obj</th><th>Poids</th><th>Jours (hebdo)</th><th>Notes</th><th>Actions</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Nom</th><th>Type</th><th>Slot</th><th>Jours</th><th>Ind</th><th>État</th><th>Actions</th></tr></thead>
       <tbody></tbody>
     </table>
-    <div class="small">Astuce : garde **≤ 8** habitudes critiques affichées au quotidien, même si tu en as >20 au total.</div>
+  </div>
+
+  <div class="row">
+    <button id="export" class="btn ghost">Exporter</button>
+    <input type="file" id="import" accept="application/json" style="display:none">
+    <button id="importBtn" class="btn ghost">Importer</button>
   </div>
 </div>
 
 <script>
-const DBKEY="habitdb.v2";
-const db={load(){try{return JSON.parse(localStorage.getItem(DBKEY))||{habits:[],logs:{}}}catch{return{habits:[],logs:{}}}},save(d){localStorage.setItem(DBKEY,JSON.stringify(d))}};
-let state=db.load();
+const DBK="habapp.v3"; const $=s=>document.querySelector(s);
+let state = JSON.parse(localStorage.getItem(DBK)||'{"version":3,"habits":[],"logs":{},"settings":{}}');
+function save(){ localStorage.setItem(DBK, JSON.stringify(state)); }
 
-const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
 const WN=["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
-
-/* Wdays chips */
-(function initWdays(){
-  const box=$("#wdays"); box.innerHTML="";
-  for(let i=0;i<7;i++){
-    const id="wd"+i;
-    const lab=document.createElement("label");
-    lab.innerHTML=`<input type="checkbox" id="${id}"> ${WN[i]}`;
-    box.appendChild(lab);
-  }
-})();
+(function buildDays(){ const b=$("#wdays"); for(let i=0;i<7;i++){ const id="wd"+i; b.insertAdjacentHTML("beforeend", `<label><input type="checkbox" id="${id}"> ${WN[i]}</label>`);} })();
 
 function getForm(){
-  const name=$("#name").value.trim();
-  const frequency=$("#freq").value;
-  const goal=Math.max(1,Number($("#goal").value)||1);
-  const weight=Number($("#weight").value)||1.0;
+  const name=$("#name").value.trim(); const type=$("#type").value; const slot=$("#slot").value;
+  const required = $("#required").checked;
   const weekdays=[]; for(let i=0;i<7;i++) if($("#wd"+i).checked) weekdays.push(i);
-  const notes=$("#notes").value.trim();
-  return {name,frequency,goal,weight,weekdays,notes};
+  return {name,type,slot,required,weekdays};
 }
 function resetForm(){
-  $("#name").value=""; $("#freq").value="daily"; $("#goal").value=1; $("#weight").value=1.0; $("#notes").value="";
+  $("#name").value=""; $("#type").value="daily"; $("#slot").value="morning"; $("#required").checked=false;
   for(let i=0;i<7;i++) $("#wd"+i).checked=false;
 }
-$("#btnAdd").onclick=()=>{
+$("#type").onchange=()=>{ document.querySelector('#slot').disabled = ($("#type").value!=='daily'); document.querySelector('#wdays').style.opacity = ($("#type").value==='weekly'?1:.35); };
+
+$("#add").onclick=()=>{
   const f=getForm(); if(!f.name){ alert("Nom requis"); return; }
   const id=Date.now().toString(36);
-  state.habits.push({id,name:f.name,frequency:f.frequency,goal:f.goal,weight:f.weight,active:1,weekdays:f.weekdays,notes:f.notes});
+  state.habits.push({id,name:f.name,type:f.type,slot:(f.type==='daily'?f.slot:null),weekdays:(f.type==='weekly'?f.weekdays:[]),required:f.required,goal:{d:1,w:1,m:0},archived:false,created_at:new Date().toISOString().slice(0,10)});
   state.logs[id]=state.logs[id]||{};
-  db.save(state); resetForm(); renderTable();
+  save(); resetForm(); renderTable();
 };
 
 function renderTable(){
-  const tb=$("#tbl tbody"); tb.innerHTML="";
+  const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
   state.habits.forEach(h=>{
-    const tr=document.createElement("tr");
-    const wtxt = h.frequency==="weekly" ? (h.weekdays||[]).map(i=>WN[i]).join(", ") : "";
-    tr.innerHTML=`
-      <td><input data-k="name" data-id="${h.id}" type="text" value="${h.name}"></td>
+    const row=document.createElement("tr");
+    row.innerHTML=`
+      <td><input data-id="${h.id}" data-k="name" value="${h.name}" /></td>
       <td>
-        <select data-k="frequency" data-id="${h.id}">
-          <option ${h.frequency==="daily"?"selected":""} value="daily">daily</option>
-          <option ${h.frequency==="weekly"?"selected":""} value="weekly">weekly</option>
-          <option ${h.frequency==="monthly"?"selected":""} value="monthly">monthly</option>
+        <select data-id="${h.id}" data-k="type">
+          <option ${h.type==='daily'?'selected':''} value="daily">daily</option>
+          <option ${h.type==='weekly'?'selected':''} value="weekly">weekly</option>
+          <option ${h.type==='lifestyle'?'selected':''} value="lifestyle">lifestyle</option>
         </select>
       </td>
-      <td><input data-k="goal" data-id="${h.id}" type="number" value="${h.goal}" style="width:70px"></td>
-      <td><input data-k="weight" data-id="${h.id}" type="number" step="0.1" value="${h.weight}" style="width:70px"></td>
       <td>
-        <div class="wdays">
-          ${WN.map((lab,i)=>`<label><input data-k="wd-${i}" data-id="${h.id}" type="checkbox" ${h.weekdays&&h.weekdays.includes(i)?"checked":""}> ${lab}</label>`).join("")}
-        </div>
+        <select data-id="${h.id}" data-k="slot">
+          <option ${h.slot==='morning'?'selected':''} value="morning">morning</option>
+          <option ${h.slot==='day'?'selected':''} value="day">day</option>
+          <option ${h.slot==='evening'?'selected':''} value="evening">evening</option>
+        </select>
       </td>
-      <td><input data-k="notes" data-id="${h.id}" type="text" value="${h.notes||""}"></td>
       <td>
-        <button class="ghost" data-act="del" data-id="${h.id}">Supprimer</button>
+        ${WN.map((lab,i)=>`<label style="margin-right:.2rem"><input data-id="${h.id}" data-k="wd-${i}" type="checkbox" ${h.weekdays&&h.weekdays.includes(i)?'checked':''}> ${lab}</label>`).join("")}
+      </td>
+      <td><input type="checkbox" data-id="${h.id}" data-k="required" ${h.required?'checked':''}></td>
+      <td>${h.archived?'<span class="badge">archivé</span>':'<span class="badge">actif</span>'}</td>
+      <td>
+        <button data-act="archive" data-id="${h.id}">${h.archived?'Désarchiver':'Archiver'}</button>
+        <button data-act="delete" data-id="${h.id}" style="margin-left:.3rem">Supprimer</button>
       </td>`;
-    tb.appendChild(tr);
+    tb.appendChild(row);
   });
 
-  // edits
-  tb.querySelectorAll("input,select").forEach(el=>{
-    el.onchange=()=>{
-      const id=el.dataset.id; const k=el.dataset.k; const h=state.habits.find(x=>x.id===id); if(!h) return;
-      if(k==="name"||k==="notes") h[k]=el.value;
-      else if(k==="frequency") h.frequency=el.value;
-      else if(k==="goal"||k==="weight") h[k]=Number(el.value);
-      else if(k.startsWith("wd-")){
-        const idx=Number(k.split("-")[1]); h.weekdays=h.weekdays||[];
-        if(el.checked){ if(!h.weekdays.includes(idx)) h.weekdays.push(idx); }
-        else{ h.weekdays=h.weekdays.filter(v=>v!==idx); }
-      }
-      db.save(state);
-    };
-  });
-  tb.querySelectorAll('[data-act="del"]').forEach(b=>{
-    b.onclick=()=>{
-      if(!confirm("Supprimer ?")) return;
-      const id=b.dataset.id;
-      state.habits=state.habits.filter(x=>x.id!==id);
-      delete state.logs[id];
-      db.save(state); renderTable();
+  tb.querySelectorAll("input,select,button").forEach(el=>{
+    el.onchange = el.onclick = ()=>{
+      const id=el.dataset.id; const h=state.habits.find(x=>x.id===id); if(!h) return;
+      const k=el.dataset.k, act=el.dataset.act;
+      if(act==="archive"){ h.archived=!h.archived; save(); renderTable(); return; }
+      if(act==="delete"){ if(confirm("Supprimer définitivement ?")){ state.habits=state.habits.filter(x=>x.id!==id); delete state.logs[id]; save(); renderTable(); } return; }
+      if(k==="name") h.name=el.value;
+      else if(k==="type") { h.type=el.value; if(h.type!=='daily') h.slot=null; if(h.type!=='weekly') h.weekdays=[]; }
+      else if(k==="slot") h.slot=el.value;
+      else if(k==="required") h.required=el.checked;
+      else if(k && k.startsWith("wd-")){ const i=Number(k.split("-")[1]); h.weekdays=h.weekdays||[]; if(el.checked){ if(!h.weekdays.includes(i)) h.weekdays.push(i); } else { h.weekdays=h.weekdays.filter(v=>v!==i); } }
+      save();
     };
   });
 }
+
+document.getElementById("export").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="habits-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("importBtn").onclick=()=>document.getElementById("import").click();
+document.getElementById("import").onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=()=>{ try{
+    const data=JSON.parse(r.result); if(!data.habits||!data.logs) throw 0; state=data; save(); renderTable();
+  }catch{ alert("Fichier invalide"); } }; r.readAsText(f);
+};
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
 renderTable();
 </script>
-</body>
-</html>
+</body></html>
