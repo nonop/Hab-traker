@@ -1,151 +1,134 @@
-<!doctype html><html lang="fr"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Gestion</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#111">
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Habits — Gestion</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111111">
 <style>
-:root{--bg:#0f1115;--card:#171a21;--ink:#e8eaf0;--mut:#9aa3b2;--acc:#48c78e;--grid:#20242e}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial}
-header{position:sticky;top:0;background:linear-gradient(0deg,transparent,rgba(0,0,0,.35));padding:.8rem 1rem;display:flex;gap:.5rem;justify-content:space-between}
-.wrap{padding:1rem;display:flex;flex-direction:column;gap:1rem}
-.card{background:var(--card);border:1px solid var(--grid);border-radius:12px;padding:.9rem}
-.row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.sp{flex:1}.mut{color:var(--mut)}
-input,select,textarea{background:#0c0e13;border:1px solid var(--grid);color:var(--ink);border-radius:10px;padding:.55rem .7rem}
-.btn{background:var(--acc);color:#08130e;border:0;border-radius:10px;padding:.55rem .9rem;font-weight:600}
-.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--grid)}
-.table{width:100%;border-collapse:collapse}.table th,.table td{border-bottom:1px solid var(--grid);padding:.45rem .3rem}
-.badge{border:1px solid var(--grid);border-radius:999px;padding:.05rem .45rem;font-size:.75rem;color:var(--mut)}
-.wdays label{border:1px solid var(--grid);border-radius:8px;padding:.2rem .4rem;margin:.1rem;display:inline-block}
-</style></head><body>
+:root{--bg:#0f1115;--card:#151821;--text:#e8eaf0;--muted:#9aa3b2;--accent:#48c78e}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto; background:var(--bg);color:var(--text)}
+header{padding:12px;display:flex;align-items:center;gap:8px;background:linear-gradient(rgba(0,0,0,0.12),transparent)}
+.container{padding:14px}
+.card{background:var(--card);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+.row{display:flex;gap:8px;align-items:center}
+.input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+.table{width:100%;margin-top:12px;border-collapse:collapse}
+.table th,.table td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:14px}
+.small{font-size:13px;color:var(--muted)}
+.btn{background:var(--accent);color:#06140d;border:0;padding:8px 10px;border-radius:10px}
+.delete{background:#ff6b6b;color:white;border:0;padding:6px 8px;border-radius:8px}
+.color-swatch{width:28px;height:28px;border-radius:8px;border:2px solid rgba(255,255,255,0.03)}
+</style>
+</head>
+<body>
 <header>
-  <a href="index.html" style="text-decoration:none"><button class="btn ghost">← Habitudes</button></a>
-  <a href="stats.html" style="text-decoration:none"><button class="btn ghost">Stats</button></a>
+  <a href="index.html" style="text-decoration:none;color:inherit">← Habitudes</a>
+  <div style="margin-left:auto"><a href="stats.html" style="text-decoration:none;color:inherit">Stats</a></div>
 </header>
 
-<div class="wrap">
+<main class="container">
   <div class="card">
     <div class="row">
-      <input id="name" class="sp" placeholder="Nom de l’habitude">
-      <select id="type">
+      <input id="name" class="input" placeholder="Nom habitude" style="flex:1"/>
+      <select id="type" class="input">
         <option value="daily">Quotidienne</option>
         <option value="weekly">Hebdomadaire</option>
-        <option value="lifestyle">Habitude de vie</option>
+        <option value="lifestyle">Vie</option>
       </select>
-      <select id="slot">
+      <select id="slot" class="input">
         <option value="morning">Matin</option>
         <option value="day">Journée</option>
         <option value="evening">Soir</option>
       </select>
-      <label class="row" style="gap:.3rem"><input type="checkbox" id="required"> <span class="mut">Indispensable</span></label>
     </div>
-    <div class="row wdays" id="wdays"></div>
-    <div class="row">
+    <div style="margin-top:8px" class="row">
+      <div id="palette" style="display:flex;gap:8px"></div>
+      <label style="margin-left:auto"><input id="req" type="checkbox"> Indispensable</label>
       <button id="add" class="btn">Ajouter</button>
     </div>
-    <div class="mut">Hebdo : coche les jours où l’habitude est due. Quotidienne : choisis Matin/Journée/Soir. Vie : pas d’horaires.</div>
+    <div style="margin-top:8px" class="small">Pour hebdo : cochez les jours ci-dessous après création.</div>
   </div>
 
-  <div class="card">
+  <div class="card" style="margin-top:12px">
+    <h3>Habitudes</h3>
     <table class="table" id="tbl">
-      <thead><tr><th>Nom</th><th>Type</th><th>Slot</th><th>Jours</th><th>Ind</th><th>État</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Nom</th><th>Type</th><th>Slot / Jours</th><th>Obj</th><th>Couleur</th><th>Actions</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
 
-  <div class="row">
-    <button id="export" class="btn ghost">Exporter</button>
-    <input type="file" id="import" accept="application/json" style="display:none">
-    <button id="importBtn" class="btn ghost">Importer</button>
+  <div style="margin-top:12px" class="card small">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="export" class="btn">Exporter JSON</button>
+      <input id="fileimport" type="file" accept="application/json" style="display:none"/>
+      <button id="doimport" class="btn" style="background:#3b82f6">Importer</button>
+      <button id="clear" class="delete">Reset local</button>
+    </div>
   </div>
-</div>
+</main>
 
 <script>
-const DBK="habapp.v3"; const $=s=>document.querySelector(s);
-let state = JSON.parse(localStorage.getItem(DBK)||'{"version":3,"habits":[],"logs":{},"settings":{}}');
-function save(){ localStorage.setItem(DBK, JSON.stringify(state)); }
+const DBK="habapp.v4"; let state = JSON.parse(localStorage.getItem(DBK)||'{"version":4,"habits":[],"logs":{},"settings":{"theme":"auto","accent":"#48c78e"}}');
+const COLORS=['#48c78e','#2E86AB','#E27D60','#E8A87C','#C38D9E','#6A9A8B','#F6C85F','#9AD3BC','#7FB069','#A9A9F5','#FFA7C4','#8DD3C7','#FFB347','#B39CD0'];
+const $=s=>document.querySelector(s);
+function save(){ localStorage.setItem(DBK, JSON.stringify(state)); renderTable(); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
-const WN=["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
-(function buildDays(){ const b=$("#wdays"); for(let i=0;i<7;i++){ const id="wd"+i; b.insertAdjacentHTML("beforeend", `<label><input type="checkbox" id="${id}"> ${WN[i]}</label>`);} })();
+/* palette */
+const palette = $("#palette");
+COLORS.forEach(c=>{ const b=document.createElement('button'); b.className='color-swatch'; b.style.background=c; b.onclick=()=>{ sel=c; highlight();}; palette.appendChild(b);});
+let sel = state.settings.accent || COLORS[0];
+function highlight(){ document.querySelectorAll('.color-swatch').forEach(b=>b.style.outline = b.style.background===sel ? '3px solid rgba(255,255,255,0.12)' : 'none'); }
+highlight();
 
-function getForm(){
-  const name=$("#name").value.trim(); const type=$("#type").value; const slot=$("#slot").value;
-  const required = $("#required").checked;
-  const weekdays=[]; for(let i=0;i<7;i++) if($("#wd"+i).checked) weekdays.push(i);
-  return {name,type,slot,required,weekdays};
-}
-function resetForm(){
-  $("#name").value=""; $("#type").value="daily"; $("#slot").value="morning"; $("#required").checked=false;
-  for(let i=0;i<7;i++) $("#wd"+i).checked=false;
-}
-$("#type").onchange=()=>{ document.querySelector('#slot').disabled = ($("#type").value!=='daily'); document.querySelector('#wdays').style.opacity = ($("#type").value==='weekly'?1:.35); };
+/* add */
+$("#add").addEventListener('click', ()=>{
+  const name = $("#name").value.trim(); if(!name) return alert("Nom requis");
+  const type = $("#type").value; const slot = $("#slot").value; const req = $("#req").checked;
+  const h = { id:uid(), name, type, slot: type==='daily'?slot:null, weekdays:[], color:sel, required:req, objective:{mode:'perday',value:1}, archived:false, created:new Date().toISOString().slice(0,10) };
+  state.habits.push(h); state.logs[h.id]=state.logs[h.id]||{}; save(); $("#name").value=''; showToast('Ajouté');
+});
 
-$("#add").onclick=()=>{
-  const f=getForm(); if(!f.name){ alert("Nom requis"); return; }
-  const id=Date.now().toString(36);
-  state.habits.push({id,name:f.name,type:f.type,slot:(f.type==='daily'?f.slot:null),weekdays:(f.type==='weekly'?f.weekdays:[]),required:f.required,goal:{d:1,w:1,m:0},archived:false,created_at:new Date().toISOString().slice(0,10)});
-  state.logs[id]=state.logs[id]||{};
-  save(); resetForm(); renderTable();
-};
-
+/* render table */
 function renderTable(){
-  const tb=document.querySelector("#tbl tbody"); tb.innerHTML="";
+  const tb=$("#tbl tbody"); tb.innerHTML='';
   state.habits.forEach(h=>{
-    const row=document.createElement("tr");
-    row.innerHTML=`
-      <td><input data-id="${h.id}" data-k="name" value="${h.name}" /></td>
-      <td>
-        <select data-id="${h.id}" data-k="type">
-          <option ${h.type==='daily'?'selected':''} value="daily">daily</option>
-          <option ${h.type==='weekly'?'selected':''} value="weekly">weekly</option>
-          <option ${h.type==='lifestyle'?'selected':''} value="lifestyle">lifestyle</option>
-        </select>
-      </td>
-      <td>
-        <select data-id="${h.id}" data-k="slot">
-          <option ${h.slot==='morning'?'selected':''} value="morning">morning</option>
-          <option ${h.slot==='day'?'selected':''} value="day">day</option>
-          <option ${h.slot==='evening'?'selected':''} value="evening">evening</option>
-        </select>
-      </td>
-      <td>
-        ${WN.map((lab,i)=>`<label style="margin-right:.2rem"><input data-id="${h.id}" data-k="wd-${i}" type="checkbox" ${h.weekdays&&h.weekdays.includes(i)?'checked':''}> ${lab}</label>`).join("")}
-      </td>
-      <td><input type="checkbox" data-id="${h.id}" data-k="required" ${h.required?'checked':''}></td>
-      <td>${h.archived?'<span class="badge">archivé</span>':'<span class="badge">actif</span>'}</td>
-      <td>
-        <button data-act="archive" data-id="${h.id}">${h.archived?'Désarchiver':'Archiver'}</button>
-        <button data-act="delete" data-id="${h.id}" style="margin-left:.3rem">Supprimer</button>
-      </td>`;
-    tb.appendChild(row);
+    const tr=document.createElement('tr');
+    const days = (h.weekdays||[]).map(d=>['D','L','Ma','Me','J','V','S'][d]).join(',');
+    tr.innerHTML = `<td><input data-id="${h.id}" data-k="name" value="${h.name}"/></td>
+      <td><select data-id="${h.id}" data-k="type"><option ${h.type==='daily'?'selected':''} value="daily">daily</option><option ${h.type==='weekly'?'selected':''} value="weekly">weekly</option><option ${h.type==='lifestyle'?'selected':''} value="lifestyle">lifestyle</option></select></td>
+      <td><select data-id="${h.id}" data-k="slot"><option ${h.slot==='morning'?'selected':''} value="morning">matin</option><option ${h.slot==='day'?'selected':''} value="day">journée</option><option ${h.slot==='evening'?'selected':''} value="evening">soir</option></select><div>${days}</div></td>
+      <td><input data-id="${h.id}" data-k="objval" type="number" value="${h.objective?h.objective.value:1}" style="width:70px"></td>
+      <td><div style="width:28px;height:28px;border-radius:6px;background:${h.color};border:1px solid rgba(0,0,0,0.2)"></div></td>
+      <td><button data-act="archive" data-id="${h.id}">${h.archived?'Désarchiver':'Archiver'}</button> <button data-act="delete" data-id="${h.id}" class="delete">Supprimer</button></td>`;
+    tb.appendChild(tr);
   });
-
-  tb.querySelectorAll("input,select,button").forEach(el=>{
+  tb.querySelectorAll('input,select,button').forEach(el=>{
     el.onchange = el.onclick = ()=>{
-      const id=el.dataset.id; const h=state.habits.find(x=>x.id===id); if(!h) return;
-      const k=el.dataset.k, act=el.dataset.act;
-      if(act==="archive"){ h.archived=!h.archived; save(); renderTable(); return; }
-      if(act==="delete"){ if(confirm("Supprimer définitivement ?")){ state.habits=state.habits.filter(x=>x.id!==id); delete state.logs[id]; save(); renderTable(); } return; }
-      if(k==="name") h.name=el.value;
-      else if(k==="type") { h.type=el.value; if(h.type!=='daily') h.slot=null; if(h.type!=='weekly') h.weekdays=[]; }
-      else if(k==="slot") h.slot=el.value;
-      else if(k==="required") h.required=el.checked;
-      else if(k && k.startsWith("wd-")){ const i=Number(k.split("-")[1]); h.weekdays=h.weekdays||[]; if(el.checked){ if(!h.weekdays.includes(i)) h.weekdays.push(i); } else { h.weekdays=h.weekdays.filter(v=>v!==i); } }
+      const id=el.dataset.id; const act=el.dataset.act; const k=el.dataset.k; if(act==='archive'){ const h=state.habits.find(x=>x.id===id); h.archived=!h.archived; save(); return; }
+      if(act==='delete'){ if(confirm('Supprimer définitivement ?')){ state.habits=state.habits.filter(x=>x.id!==id); delete state.logs[id]; save(); } return;}
+      if(!id) return;
+      const h = state.habits.find(x=>x.id===id); if(!h) return;
+      if(k==='name') h.name=el.value;
+      else if(k==='type') h.type=el.value;
+      else if(k==='slot') h.slot=el.value;
+      else if(k==='objval') h.objective = {mode:'perday', value:Number(el.value)||1};
       save();
     };
   });
 }
 
-document.getElementById("export").onclick=()=>{
-  const blob=new Blob([JSON.stringify(state)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="habits-backup.json"; a.click(); URL.revokeObjectURL(a.href);
-};
-document.getElementById("importBtn").onclick=()=>document.getElementById("import").click();
-document.getElementById("import").onchange=(e)=>{
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader(); r.onload=()=>{ try{
-    const data=JSON.parse(r.result); if(!data.habits||!data.logs) throw 0; state=data; save(); renderTable();
-  }catch{ alert("Fichier invalide"); } }; r.readAsText(f);
-};
+/* export/import/reset */
+$("#export").addEventListener('click', ()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(state)],{type:'application/json'})); a.download='habits-backup.json'; a.click(); });
+$("#doimport").addEventListener('click', ()=>$("#fileimport").click());
+$("#fileimport").addEventListener('change', e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const d=JSON.parse(r.result); if(!d.habits||!d.logs) return alert('Fichier invalide'); state=d; localStorage.setItem(DBK, JSON.stringify(state)); renderTable(); alert('Import ok'); }catch(err){ alert('Erreur'); } }; r.readAsText(f); });
+$("#clear").addEventListener('click', ()=>{ if(confirm('Réinitialiser tout localement ?')){ localStorage.removeItem(DBK); location.reload(); } });
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
+function showToast(t){ alert(t); }
 renderTable();
 </script>
-</body></html>
+</body>
+</html>
