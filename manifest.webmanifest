@@ -1,6 +1,6 @@
 {
-  "name": "Habits",
-  "short_name": "Habits",
+  "name": "Routine",
+  "short_name": "Routine",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
