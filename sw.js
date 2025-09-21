@@ -1,4 +1,4 @@
-const CACHE = "routine-cache-v6";
+const CACHE = "routine-cache-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -16,8 +16,8 @@ self.addEventListener("activate", e=>{
 });
 self.addEventListener("fetch", e=>{
   const req=e.request;
-  const isHTML = req.mode==="navigate" || (req.headers.get("accept")||"").includes("text/html");
-  if(isHTML){
+  const wantsHTML = req.mode==="navigate" || (req.headers.get("accept")||"").includes("text/html");
+  if(wantsHTML){
     e.respondWith(fetch(req).then(r=>{ caches.open(CACHE).then(c=>c.put(req,r.clone())); return r; })
       .catch(()=>caches.match('./index.html')));
     return;
