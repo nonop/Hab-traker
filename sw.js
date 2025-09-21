@@ -1,8 +1,7 @@
-const CACHE = "habits-cache-v4";
+const CACHE = "habits-cache-v5";
 const ASSETS = [
   "./",
   "./index.html",
-  "./settings.html",
   "./stats.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
@@ -16,11 +15,12 @@ self.addEventListener("activate", e=>{
   e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
 });
 self.addEventListener("fetch", e=>{
-  const req = e.request;
-  const url = new URL(req.url);
-  if(req.mode === "navigate" || (req.headers.get("accept")||"").includes("text/html")){
-    e.respondWith(fetch(req).then(r=>{ caches.open(CACHE).then(c=>c.put(req,r.clone())); return r; }).catch(()=>caches.match('./index.html')));
+  const req=e.request;
+  const isHTML = req.mode==="navigate" || (req.headers.get("accept")||"").includes("text/html");
+  if(isHTML){
+    e.respondWith(fetch(req).then(r=>{ caches.open(CACHE).then(c=>c.put(req,r.clone())); return r; })
+      .catch(()=>caches.match('./index.html')));
     return;
   }
-  e.respondWith(caches.match(req).then(c=>c || fetch(req).then(r=>{ caches.open(CACHE).then(cache=>cache.put(req,r.clone())); return r; })));
+  e.respondWith(caches.match(req).then(m=>m||fetch(req).then(r=>{ caches.open(CACHE).then(c=>c.put(req,r.clone())); return r; })));
 });
