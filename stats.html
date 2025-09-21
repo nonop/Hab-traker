@@ -2,198 +2,126 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <title>Habits — Stats</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#111111">
 <style>
 :root{--bg:#0f1115;--card:#151821;--text:#e8eaf0;--muted:#9aa3b2;--accent:#48c78e}
+*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto}
-.header{padding:12px;display:flex;gap:8px;align-items:center}
-.container{padding:14px}
-.card{background:var(--card);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);margin-bottom:12px}
-.small{font-size:13px;color:var(--muted)}
+header{position:sticky;top:0;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;gap:8px;align-items:center;backdrop-filter:saturate(140%) blur(6px);background:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.02))}
+a,button{color:inherit}
+.container{padding:14px 16px 40px}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+.pill.active{background:var(--accent);color:#06140d;border-color:transparent}
+.small{font-size:12px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.daycell{height:22px;border-radius:4px;background:#111}
-.legend{display:flex;gap:8px;align-items:center;margin-top:8px}
-.badge{display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02)}
-.table{width:100%;border-collapse:collapse;margin-top:8px}
-.table th,.table td{border-bottom:1px solid rgba(255,255,255,0.03);padding:8px}
+.cell{height:22px;border-radius:4px;background:#2b2f36}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid rgba(255,255,255,.06);padding:8px}
 </style>
 </head>
 <body>
-<div class="header">
-  <a href="index.html" style="color:inherit;text-decoration:none">← Habitudes</a>
-  <div style="margin-left:auto"><a href="settings.html" style="color:inherit;text-decoration:none">Gestion</a></div>
-</div>
+<header>
+  <a href="index.html" class="pill">← Suivi</a>
+  <div style="margin-left:auto" class="small" id="summary"></div>
+</header>
 
 <main class="container">
   <div class="card">
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="viewWeek" class="badge">Semaine</button>
-      <button id="viewMonth" class="badge">Mois</button>
-      <button id="view3m" class="badge">3 mois</button>
-      <button id="viewYear" class="badge">Année</button>
-      <div style="margin-left:auto" id="summary" class="small"></div>
+    <div class="row">
+      <button class="pill active" data-v="week">Semaine</button>
+      <button class="pill" data-v="month">Mois</button>
+      <button class="pill" data-v="quarter">3 mois</button>
+      <button class="pill" data-v="year">Année</button>
     </div>
   </div>
 
   <div class="card">
-    <h3>Heatmap (30 derniers jours)</h3>
-    <div id="heatmap" class="grid"></div>
-    <div class="legend small">
-      <div>Faible</div><div style="width:24px;height:12px;background:#2b2f36;border-radius:4px"></div>
-      <div style="width:24px;height:12px;background:#2fbb88;border-radius:4px"></div><div>Fort</div>
+    <div class="row" style="justify-content:space-between">
+      <div><strong>Heatmap</strong> <span class="small">(taux de réussite par jour)</span></div>
     </div>
+    <div id="heat" class="grid"></div>
+    <div class="small" style="margin-top:6px">Plus c’est vert, plus la journée est réussie.</div>
   </div>
 
   <div class="card">
-    <h3>Top 3 (sur la période)</h3>
+    <div><strong>Top habitudes</strong></div>
     <table class="table" id="top"><thead><tr><th>Habitude</th><th>%</th></tr></thead><tbody></tbody></table>
-  </div>
-
-  <div class="card">
-    <h3>Badges débloqués</h3>
-    <div id="badgelist" class="small"></div>
   </div>
 </main>
 
 <script>
-const DBK="habapp.v4"; let state = JSON.parse(localStorage.getItem(DBK)||'{"version":4,"habits":[],"logs":{},"settings":{}}');
-const $=s=>document.querySelector(s);
+const DBK="habapp.v5"; const $=s=>document.querySelector(s);
+let state = JSON.parse(localStorage.getItem(DBK)||'{"version":5,"habits":[],"logs":{},"settings":{}}');
 
-function iso(d){ const x=new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
-function daysAgo(n){ const a=[]; for(let i=n-1;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); a.push(new Date(d)); } return a; }
+function iso(d){ const x=new Date(d); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
+function daysBack(n){ const out=[]; for(let i=n-1;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push(new Date(d)); } return out; }
+function dueOn(h,d){ if(h.type==='daily'||h.type==='life') return true; if(h.type==='weekly') return (h.weekdays||[]).includes(d.getDay()); return true; }
 
-/* heatmap 30j by default */
-function renderHeat(nDays=30){
-  const days = daysAgo(nDays);
-  const heat = $("#heatmap"); heat.innerHTML='';
-  const activeHab = state.habits.filter(h=>!h.archived);
+function render(period='week'){
+  const ranges={week:7,month:30,quarter:90,year:365};
+  const n=ranges[period]||7;
+  const days=daysBack(n);
+  const active=state.habits.filter(h=>!h.archived);
+  const logs=state.logs||{};
+
+  // summary
+  let totalDue=0,totalDone=0;
   days.forEach(d=>{
-    const key = iso(d);
-    let totalDue=0, totalDone=0;
-    activeHab.forEach(h=>{
-      let due=false;
-      if(h.type==='daily' || h.type==='lifestyle') due=true;
-      if(h.type==='weekly') due = (h.weekdays||[]).includes(d.getDay());
-      if(due) totalDue++;
-      if(state.logs[h.id] && state.logs[h.id][key]) totalDone++;
+    const k=iso(d);
+    active.forEach(h=>{
+      if(!dueOn(h,d)) return;
+      totalDue++;
+      const val=(logs[h.id]&&logs[h.id][k])||0;
+      const target = (h.objective && h.objective.mode==='perday') ? (h.objective.value||1) : 1;
+      if(val>=target) totalDone++;
     });
-    const rate = totalDue? Math.round(totalDone/totalDue*100) : 0;
-    const color = rate>75? '#2fbb88' : rate>40? '#6ecfa0' : '#2b2f36';
-    const div = document.createElement('div'); div.className='daycell'; div.style.background=color; div.title = `${key} — ${totalDone}/${totalDue} (${rate}%)`;
-    heat.appendChild(div);
   });
-}
+  const rate = totalDue? Math.round(totalDone/totalDue*100):0;
+  $("#summary").textContent=`${rate}% sur ${period}`;
 
-/* top habits */
-function renderTop(nDays=30){
-  const days = daysAgo(nDays);
-  const activeHab = state.habits.filter(h=>!h.archived);
-  const arr = activeHab.map(h=>{
-    let due=0, done=0;
-    days.forEach(d=>{
-      let isDue=false;
-      if(h.type==='daily' || h.type==='lifestyle') isDue=true;
-      if(h.type==='weekly') isDue = (h.weekdays||[]).includes(d.getDay());
-      if(isDue) due++;
-      if(state.logs[h.id] && state.logs[h.id][iso(d)]) done++;
+  // heatmap
+  const grid=$("#heat"); grid.innerHTML='';
+  days.forEach(d=>{
+    const k=iso(d);
+    let due=0,done=0;
+    active.forEach(h=>{
+      if(!dueOn(h,d)) return;
+      due++;
+      const val=(logs[h.id]&&logs[h.id][k])||0;
+      const target = (h.objective && h.objective.mode==='perday') ? (h.objective.value||1) : 1;
+      if(val>=target) done++;
     });
-    return {name:h.name, rate: due? Math.round(done/due*100) : 0};
-  }).sort((a,b)=>b.rate-a.rate).slice(0,3);
+    const r = due? Math.round(done/due*100):0;
+    const c = r>75? '#2fbb88' : r>40 ? '#6ecfa0' : '#2b2f36';
+    const div=document.createElement('div'); div.className='cell'; div.style.background=c; div.title=`${k} — ${done}/${due} (${r}%)`;
+    grid.appendChild(div);
+  });
+
+  // top habits
+  const arr = active.map(h=>{
+    let due=0,done=0;
+    days.forEach(d=>{
+      if(!dueOn(h,d)) return;
+      due++;
+      const val=(logs[h.id]&&logs[h.id][iso(d)])||0;
+      const target = (h.objective && h.objective.mode==='perday') ? (h.objective.value||1) : 1;
+      if(val>=target) done++;
+    });
+    return {name:h.name, rate: due? Math.round(done/due*100):0};
+  }).sort((a,b)=>b.rate-a.rate).slice(0,5);
   const tb=$("#top tbody"); tb.innerHTML=''; arr.forEach(x=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${x.name}</td><td>${x.rate}%</td>`; tb.appendChild(tr); });
 }
 
-/* badges - simple check across logs */
-const BADGES = [
-  {id:'flame3', title:'🔥 Première flamme', check: st => streakDays(st,3)>=3},
-  {id:'flame7', title:'🔥🔥 Petite flamme', check: st => streakDays(st,7)>=7},
-  {id:'flame14', title:'🔥🔥🔥 Flamme solide', check: st => streakDays(st,14)>=14},
-  {id:'volcan30', title:'🌋 Volcan actif', check: st => streakDays(st,30)>=30},
-  {id:'sun100', title:'🌞 Soleil éternel', check: st => streakDays(st,100)>=100},
-  {id:'newseed', title:'🌱 Nouvelle pousse', check: st => totalDaysTracked(st)>=7},
-  {id:'young', title:'🌿 Jeune pousse', check: st => totalDaysTracked(st)>=30},
-  {id:'oak', title:'🌳 Chêne solide', check: st => totalDaysTracked(st)>=180},
-  {id:'marathon', title:'🏃 Marathonien', check: st => totalCountByType(st,'run')>=42}, // sample (depends on names)
-  // ... continue mapping many badges (50) - simplified checks below:
-];
-
-function totalDaysTracked(st){
-  const keys = new Set();
-  Object.values(st.logs||{}).forEach(obj=> Object.keys(obj||{}).forEach(k=> keys.add(k)));
-  return keys.size;
-}
-function streakDays(st, minDays){
-  // simplistic: check if there exists minDays consecutive days where at least one habit done
-  const days = Object.keys(st.logs||{}).reduce((s,k)=> { s.add(k); return s; }, new Set());
-  if(days.size===0) return 0;
-  const arr = Array.from(days).sort();
-  let max=0, cur=0;
-  let prev = null;
-  arr.forEach(d=>{
-    if(!prev) { cur=1; prev=d; }
-    else {
-      const pd = new Date(prev); pd.setDate(pd.getDate()+1);
-      const ds = new Date(d);
-      if(ds.toISOString().slice(0,10)===pd.toISOString().slice(0,10)) cur++; else cur=1;
-      prev=d;
-    }
-    if(cur>max) max=cur;
-  });
-  return max;
-}
-function totalCountByType(st, substr){
-  // count logs where habit name contains substr
-  let cnt=0;
-  st.habits.forEach(h=>{
-    if(h.name.toLowerCase().includes(substr)) {
-      cnt += Object.keys(st.logs[h.id]||{}).length;
-    }
-  });
-  return cnt;
-}
-
-function renderBadges(){
-  const list = $("#badgelist"); list.innerHTML='';
-  // evaluate each badge in BADGES
-  BADGES.forEach(b=>{
-    try{
-      const ok = b.check(state);
-      const el = document.createElement('div'); el.textContent = (ok? '🏅 ':'⏳ ') + b.title; list.appendChild(el);
-    }catch(e){}
-  });
-  // Easter eggs & advanced badges (simple examples)
-  const eggs = [];
-  if(checkSwissPrecision(state)) eggs.push('⏱️ Réglé comme une montre suisse');
-  eggs.forEach(e=>{ const d=document.createElement('div'); d.textContent = '✨ '+e; list.appendChild(d); });
-}
-
-function checkSwissPrecision(st){
-  // example: user did all morning habits 28 days in a row
-  // simplified: check if any morning habit has 28 consecutive logs
-  const morningHab = st.habits.filter(h=>h.type==='daily' && h.slot==='morning');
-  for(const h of morningHab){
-    const days = Object.keys(st.logs[h.id]||{}).sort();
-    if(days.length<28) continue;
-    // naive consecutive check:
-    let max=1, cur=1;
-    for(let i=1;i<days.length;i++){
-      const d1=new Date(days[i-1]); const d2=new Date(days[i]);
-      d1.setDate(d1.getDate()+1);
-      if(d1.toISOString().slice(0,10)===d2.toISOString().slice(0,10)) cur++; else cur=1;
-      if(cur>max) max=cur;
-      if(max>=28) return true;
-    }
-  }
-  return false;
-}
-
-/* initial render */
-renderHeat(30); renderTop(30); renderBadges();
-document.getElementById('viewMonth').addEventListener('click', ()=>{ renderHeat(90); renderTop(90); });
-document.getElementById('viewWeek').addEventListener('click', ()=>{ renderHeat(14); renderTop(14); });
-document.getElementById('view3m').addEventListener('click', ()=>{ renderHeat(90); renderTop(90); });
+document.querySelectorAll('[data-v]').forEach(b=>{
+  b.onclick=()=>{ document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active')); b.classList.add('active'); render(b.dataset.v); };
+});
+render('week');
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js'); }
 </script>
 </body>
 </html>
